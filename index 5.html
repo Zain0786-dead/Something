@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>In my Heart 💗👩‍💻</title>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: #101010;
+      overflow: hidden;
+    }
+
+    canvas {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    .namebox, .love-text {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .namebox.animate {
+      animation: popUp 2s ease-out 5.4s forwards, heartbeat 1.5s ease-in-out 7.4s infinite;
+    }
+
+    .love-text.animate {
+      animation: fadeIn 2s ease-in 8.4s forwards, fadeOut 2s ease-out 14.4s forwards;
+    }
+
+    .namebox {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.5);
+      color: #fff;
+      font-family: 'Great Vibes', cursive;
+      font-size: 12vw;
+      text-align: center;
+      white-space: nowrap;
+      text-shadow: 2px 2px 8px #000;
+      z-index: 1;
+    }
+
+    .love-text {
+      position: absolute;
+      top: 55%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Great Vibes', cursive;
+      font-size: 5vw;
+      color: #ff79c6;
+      text-shadow: 2px 2px 8px #000;
+      z-index: 1;
+    }
+
+    @keyframes popUp {
+      0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+      60% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+
+    @keyframes heartbeat {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      25% { transform: translate(-50%, -50%) scale(1.05); }
+      50% { transform: translate(-50%, -50%) scale(1.1); }
+      75% { transform: translate(-50%, -50%) scale(1.05); }
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+    .floating-heart {
+      position: absolute;
+      animation: floatUp 5s linear forwards;
+      opacity: 0.8;
+    }
+
+    @keyframes floatUp {
+      from { transform: translateY(0); opacity: 0.8; }
+      to { transform: translateY(-100vh); opacity: 0; }
+    }
+
+    .intro-overlay {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: #101010;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-family: 'Great Vibes', cursive;
+      font-size: 3vw;
+      text-align: center;
+    }
+
+    .intro-line1 {
+      opacity: 0;
+      animation: fadeIn 2s ease-in forwards, fadeOut 2s ease-out 2s forwards;
+      margin-bottom: 20px;
+    }
+
+    .intro-line2 {
+      opacity: 0;
+      animation: fadeIn 2s ease-in 3s forwards;
+      white-space: nowrap;
+    }
+
+    .start-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1.5vw;
+      cursor: pointer;
+      background: #ff79c6;
+      border: none;
+      color: #fff;
+      font-family: 'Great Vibes', cursive;
+      border-radius: 8px;
+      opacity: 0;
+      animation: fadeIn 2s ease-in 8s forwards;
+    }
+
+    /* ✨ Romantic Decorations */
+    .decorations {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0; left: 0;
+      overflow: hidden;
+      z-index: 9;
+      pointer-events: none;
+    }
+
+    .decoration {
+      position: absolute;
+      font-size: 2.5vw;
+      opacity: 0.8;
+      animation: floatDecor 10s linear infinite;
+    }
+
+    @keyframes floatDecor {
+      0% { transform: translateY(100vh) rotate(0deg); opacity: 0.5; }
+      50% { opacity: 1; }
+      100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="intro-overlay" id="introOverlay">
+    <div class="intro-line1">Listen beautiful🥺</div>
+    <div class="intro-line2">When I say you are only in my heart, Basically I mean this😍 👇.</div>
+    <button class="start-btn" id="startBtn">Tap here🫶</button>
+    <!-- 💕 Romantic Decorations -->
+    <div class="decorations" id="decorations"></div>
+  </div>
+
+  <canvas id="pinkboard"></canvas>
+  <div class="namebox" id="namebox">KAKA🧸</div>
+  <div class="love-text" id="loveText">love you so much❤️</div>
+
+  <script>
+    let startTime;
+    const canvas = document.getElementById("pinkboard");
+    const context = canvas.getContext("2d");
+
+    const settings = {
+      particles: {
+        length: 500,
+        duration: 2,
+        velocity: 100,
+        effect: -0.75,
+        size: 30
+      }
+    };
+
+    class Point {
+      constructor(x = 0, y = 0) {
+        this.x = x;
+        this.y = y;
+      }
+      clone() {
+        return new Point(this.x, this.y);
+      }
+      length(length) {
+        if (typeof length === "undefined")
+          return Math.sqrt(this.x * this.x + this.y * this.y);
+        this.normalize();
+        this.x *= length;
+        this.y *= length;
+        return this;
+      }
+      normalize() {
+        const length = this.length();
+        this.x /= length;
+        this.y /= length;
+        return this;
+      }
+    }
+
+    class Particle {
+      constructor() {
+        this.position = new Point();
+        this.velocity = new Point();
+        this.acceleration = new Point();
+        this.age = 0;
+      }
+      initialize(x, y, dx, dy) {
+        this.position.x = x;
+        this.position.y = y;
+        this.velocity.x = dx;
+        this.velocity.y = dy;
+        this.acceleration.x = dx * settings.particles.effect;
+        this.acceleration.y = dy * settings.particles.effect;
+        this.age = 0;
+      }
+      update(deltaTime) {
+        this.position.x += this.velocity.x * deltaTime;
+        this.position.y += this.velocity.y * deltaTime;
+        this.velocity.x += this.acceleration.x * deltaTime;
+        this.velocity.y += this.acceleration.y * deltaTime;
+        this.age += deltaTime;
+      }
+      draw(context, image) {
+        const ease = (t) => (--t) * t * t + 1;
+        const size = image.width * ease(this.age / settings.particles.duration);
+        context.globalAlpha = 1 - this.age / settings.particles.duration;
+        context.drawImage(
+          image,
+          this.position.x - size / 2,
+          this.position.y - size / 2,
+          size,
+          size
+        );
+      }
+    }
+
+    class ParticlePool {
+      constructor(length) {
+        this.particles = new Array(length);
+        for (let i = 0; i < length; i++) this.particles[i] = new Particle();
+        this.firstActive = 0;
+        this.firstFree = 0;
+        this.duration = settings.particles.duration;
+      }
+
+      add(x, y, dx, dy) {
+        this.particles[this.firstFree].initialize(x, y, dx, dy);
+        this.firstFree = (this.firstFree + 1) % this.particles.length;
+        if (this.firstActive === this.firstFree) {
+          this.firstActive = (this.firstActive + 1) % this.particles.length;
+        }
+      }
+
+      update(deltaTime) {
+        let i = this.firstActive;
+        while (i !== this.firstFree) {
+          this.particles[i].update(deltaTime);
+          if (this.particles[i].age >= this.duration) {
+            this.firstActive = (this.firstActive + 1) % this.particles.length;
+          }
+          i = (i + 1) % this.particles.length;
+        }
+      }
+
+      draw(context, image) {
+        let i = this.firstActive;
+        while (i !== this.firstFree) {
+          this.particles[i].draw(context, image);
+          i = (i + 1) % this.particles.length;
+        }
+      }
+    }
+
+    function pointOnHeart(t) {
+      return new Point(
+        160 * Math.pow(Math.sin(t), 3),
+        130 * Math.cos(t) - 50 * Math.cos(2 * t) - 20 * Math.cos(3 * t) - 10 * Math.cos(4 * t) + 25
+      );
+    }
+
+    const particles = new ParticlePool(settings.particles.length);
+    const particleRate = settings.particles.length / settings.particles.duration;
+
+    const heartImage = (() => {
+      const c = document.createElement("canvas");
+      c.width = settings.particles.size;
+      c.height = settings.particles.size;
+      const ctx = c.getContext("2d");
+      ctx.beginPath();
+      let t = -Math.PI;
+      const to = (t) => {
+        const p = pointOnHeart(t);
+        p.x = settings.particles.size / 2 + (p.x * settings.particles.size) / 350;
+        p.y = settings.particles.size / 2 - (p.y * settings.particles.size) / 350;
+        return p;
+      };
+      let p = to(t);
+      ctx.moveTo(p.x, p.y);
+      while (t < Math.PI) {
+        t += 0.01;
+        p = to(t);
+        ctx.lineTo(p.x, p.y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = "#ff30c5";
+      ctx.fill();
+      const img = new Image();
+      img.src = c.toDataURL();
+      return img;
+    })();
+
+    let time, exploded = false;
+
+    function createFloatingHearts() {
+      for (let i = 0; i < 5; i++) {
+        const heart = document.createElement("div");
+        heart.className = "floating-heart";
+        heart.textContent = "💗🫀";
+        heart.style.left = Math.random() * 100 + "vw";
+        heart.style.top = 100 + "vh";
+        heart.style.fontSize = (1 + Math.random() * 2) + "em";
+        heart.style.animationDuration = (3 + Math.random() * 2) + "s";
+        heart.style.animationDelay = (Math.random() * 1) + "s";
+        document.body.appendChild(heart);
+
+        setTimeout(() => heart.remove(), 5000);
+      }
+    }
+
+    function render() {
+      requestAnimationFrame(render);
+      const newTime = Date.now() / 1000;
+      const deltaTime = newTime - (time || newTime);
+      time = newTime;
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (!exploded && newTime - startTime < 5) {
+        const amount = particleRate * deltaTime;
+        for (let i = 0; i < amount; i++) {
+          const pos = pointOnHeart(Math.PI - 2 * Math.PI * Math.random());
+          const dir = pos.clone().length(settings.particles.velocity);
+          particles.add(canvas.width / 2 + pos.x, canvas.height / 2 - pos.y, dir.x, -dir.y);
+        }
+      } else if (!exploded) {
+        exploded = true;
+        for (let i = 0; i < particles.particles.length; i++) {
+          const angle = Math.random() * 2 * Math.PI;
+          const speed = 300 + Math.random() * 200;
+          particles.particles[i].velocity.x = Math.cos(angle) * speed;
+          particles.particles[i].velocity.y = Math.sin(angle) * speed;
+          particles.particles[i].acceleration.x = 0;
+          particles.particles[i].acceleration.y = 0;
+        }
+        createFloatingHearts();
+        setInterval(createFloatingHearts, 2000);
+      }
+
+      particles.update(deltaTime);
+      particles.draw(context, heartImage);
+    }
+
+    function onResize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    window.onresize = onResize;
+
+    document.getElementById("startBtn").addEventListener("click", () => {
+      document.getElementById("introOverlay").style.display = "none";
+      document.getElementById("namebox").classList.add("animate");
+      document.getElementById("loveText").classList.add("animate");
+      onResize();
+      startTime = Date.now() / 1000;
+      render();
+    });
+
+    // Romantic Decorations
+    const decorContainer = document.getElementById("decorations");
+    const decorEmojis = ['💐','🎈','🌸','💖','🌹','💝','🎀','💕'];
+    for (let i = 0; i < 30; i++) {
+      const decor = document.createElement("div");
+      decor.className = "decoration";
+      decor.textContent = decorEmojis[Math.floor(Math.random() * decorEmojis.length)];
+      decor.style.left = Math.random() * 100 + "vw";
+      decor.style.animationDuration = (6 + Math.random() * 5) + "s";
+      decor.style.fontSize = (2 + Math.random() * 3) + "vw";
+      decor.style.top = Math.random() * 100 + "vh";
+      decorContainer.appendChild(decor);
+    }
+  </script>
+</body>
+</html>

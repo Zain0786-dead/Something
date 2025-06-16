@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Starry Love Lamp</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: #0b0c10;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      font-family: 'Segoe UI', sans-serif;
+      transition: background 1s ease;
+    }
+
+    .stars-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+
+    .on-body .stars-container {
+      opacity: 1;
+    }
+
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: white;
+      border-radius: 50%;
+      opacity: 0.8;
+      animation: twinkle 2s infinite alternate;
+    }
+
+    @keyframes twinkle {
+      from { opacity: 0.3; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1.3); }
+    }
+
+    .lamp-container {
+      position: relative;
+      top: 50px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 2;
+    }
+
+    .cable {
+      width: 4px;
+      height: 120px;
+      background: #444;
+    }
+
+    .lamp {
+      width: 100px;
+      height: 60px;
+      background: #222;
+      border-radius: 50% 50% 20% 20%;
+      position: relative;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+      cursor: pointer;
+      transition: background 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .lamp::before {
+      content: '';
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 20px;
+      height: 15px;
+      background: #666;
+      border-radius: 4px;
+    }
+
+    .bulb {
+      width: 30px;
+      height: 40px;
+      background: #ccc;
+      border-radius: 50% 50% 60% 60%;
+      margin-top: -5px;
+      z-index: 1;
+      transition: background 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .light {
+      position: absolute;
+      top: 220px;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(255, 255, 100, 0.7) 0%, rgba(255, 255, 100, 0) 70%);
+      filter: blur(60px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+      z-index: 0;
+    }
+
+    .text {
+      margin-top: 200px;
+      font-size: 2em;
+      color: #fff8c0;
+      text-shadow: 0 0 10px #fff8c0, 0 0 20px #fff8c0;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .on .bulb {
+      background: #fff8a0;
+      box-shadow: 0 0 25px 12px rgba(255, 255, 120, 0.8);
+    }
+
+    .on .light {
+      opacity: 1;
+    }
+
+    .on .text {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="stars-container" id="starsContainer"></div>
+
+  <div class="lamp-container" id="lampContainer">
+    <div class="cable"></div>
+    <div class="lamp"></div>
+    <div class="bulb"></div>
+    <div class="light"></div>
+    <div class="text">I MISS YOU SO MUCH🥺</div>
+  </div>
+
+  <script>
+    const lampContainer = document.getElementById('lampContainer');
+    const body = document.body;
+    const starsContainer = document.getElementById('starsContainer');
+
+    // Generate stars once
+    function createStars(count = 100) {
+      for (let i = 0; i < count; i++) {
+        const star = document.createElement('div');
+        star.classList.add('star');
+        star.style.top = `${Math.random() * 100}%`;
+        star.style.left = `${Math.random() * 100}%`;
+        star.style.animationDuration = `${1.5 + Math.random() * 2}s`;
+        starsContainer.appendChild(star);
+      }
+    }
+
+    createStars();
+
+    const toggleLamp = (e) => {
+      e.preventDefault();
+      lampContainer.classList.toggle('on');
+      body.classList.toggle('on-body');
+    };
+
+    lampContainer.addEventListener('pointerdown', toggleLamp);
+  </script>
+</body>
+</html>

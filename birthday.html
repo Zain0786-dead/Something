@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Birthday Surprise</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Lato:ital,wght@1,300&display=swap" rel="stylesheet">
+    <!-- Anime.js is the best way to handle SVG on Safari -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    
+    <style>
+        * { padding: 0; margin: 0; box-sizing: border-box; }
+
+        body {
+            width: 100%; height: 100vh;
+            overflow: hidden;
+            background-color: #ee9ca7;
+            font-family: "Poppins", sans-serif;
+            position: fixed; /* Prevents iPhone bounce-scroll */
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- BACKGROUND DECORATIONS --- */
+        .decorations {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; pointer-events: none;
+        }
+        .balloon {
+            position: absolute; width: 40px; height: 50px;
+            background: rgba(255, 255, 255, 0.3); border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+            -webkit-transform: translateZ(0); /* Safari GPU boost */
+        }
+        .heart {
+            position: absolute; width: 15px; height: 15px;
+            background-color: rgba(255, 255, 255, 0.4);
+            transform: rotate(45deg); animation: float 4s ease-in-out infinite;
+            -webkit-transform: rotate(45deg) translateZ(0);
+        }
+        .heart::before, .heart::after { content: ""; position: absolute; width: 15px; height: 15px; background-color: inherit; border-radius: 50%; }
+        .heart::before { top: -8px; left: 0; } .heart::after { left: -8px; top: 0; }
+        @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-30px) rotate(5deg); } }
+
+        /* --- PAGE MANAGEMENT --- */
+        .page {
+            position: absolute; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.8s ease-in-out;
+            -webkit-backface-visibility: hidden;
+        }
+        #page-2 { display: none; opacity: 0; z-index: 5; }
+
+        /* --- PAGE 1: CAKE --- */
+        .cake-wrapper { display: flex; flex-direction: column; align-items: center; }
+        .cake-container { position: relative; width: 200px; height: 120px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 20px; }
+        #cake-svg { width: 200px; height: 500px; position: absolute; bottom: -20px; }
+        .velas { background: #ffffff; border-radius: 10px; position: absolute; bottom: 60px; left: 50%; margin-left: -2.5px; width: 5px; height: 35px; transform: translateY(-400px); opacity: 0; z-index: 10; }
+        .velas:after, .velas:before { background: rgba(255, 0, 0, 0.4); content: ""; position: absolute; width: 100%; height: 2.22px; }
+        .fuego { border-radius: 100%; position: absolute; top: -20px; left: 50%; margin-left: -3.3px; width: 6.6px; height: 18px; opacity: 0; }
+        .fuego.burn { opacity: 1; }
+        .fuego:nth-child(1) { animation: fireMove 2s infinite; }
+        @keyframes fireMove {
+            0%, 100% { background: rgba(254, 248, 97, 0.5); box-shadow: 0 0 40px 10px rgba(248, 233, 209, 0.2); transform: translateY(0) scale(1); }
+            50% { background: rgba(255, 50, 0, 0.1); box-shadow: 0 0 40px 20px rgba(248, 233, 209, 0.2); transform: translateY(-20px) scale(0); }
+        }
+        .cake-text { color: #8b6a60; font-family: 'Lato', sans-serif; font-style: italic; text-align: center; }
+        .cake-text h1 { margin: 0; font-size: 1.5em; }
+        path { opacity: 0; }
+
+        /* --- PAGE 2: 3D CARD (SAFARI COMPATIBLE) --- */
+        .card-viewport {
+            width: 100%; display: flex; justify-content: center; align-items: center;
+        }
+        .card {
+            width: 640px; height: 400px;
+            position: relative;
+            -webkit-perspective: 1500px;
+            perspective: 1500px;
+            transition: 1s;
+        }
+        
+        /* Tap behavior for iPhone */
+        .card.open .outside { -webkit-transform: rotateY(-130deg); transform: rotateY(-130deg); }
+        .card.open { -webkit-transform: rotate(-5deg); transform: rotate(-5deg); }
+
+        .outside, .inside {
+            height: 100%; width: 50%;
+            position: absolute; left: 50%;
+            -webkit-transform-style: preserve-3d;
+            transform-style: preserve-3d;
+        }
+        
+        .inside {
+            background: linear-gradient(to right, #e7e7e7, #ffffff 30%);
+            padding: 40px 30px; display: flex; flex-direction: column;
+            justify-content: flex-start; align-items: flex-start;
+            z-index: 0; border-radius: 0 10px 10px 0;
+            box-shadow: inset 10px 0 20px -10px rgba(0,0,0,0.15);
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch; /* Smooth scroll for Safari */
+        }
+        
+        .inside p {
+            font-size: 15px; color: #333; line-height: 1.7;
+            text-align: left; width: 100%;
+        }
+
+        .outside {
+            z-index: 1; 
+            -webkit-transform-origin: left;
+            transform-origin: left;
+            transition: 2s; cursor: pointer;
+            /* Lifts cover so text doesn't bleed through on Safari */
+            -webkit-transform: translateZ(2px);
+            transform: translateZ(2px);
+        }
+        .front, .back {
+            height: 100%; width: 100%; position: absolute;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
+        .front { background-color: #ffffff; border-radius: 0 10px 10px 0; }
+        .back { 
+            -webkit-transform: rotateY(180deg);
+            transform: rotateY(180deg); 
+            background: linear-gradient(to left, #e7e7e7, #ffffff 30%);
+            border-radius: 10px 0 0 10px;
+        }
+        
+        .card-cake { width: 100%; position: absolute; bottom: 30px; }
+        .top-layer, .middle-layer, .bottom-layer {
+            height: 80px; width: 240px; background-repeat: repeat; background-size: 60px 100px; background-position: 28px 0;
+            background-image: linear-gradient(transparent 50px, #fedbab 50px, #fedbab 60px, transparent 60px), radial-gradient(circle at 30px 5px, #994c10 30px, #fcbf29 31px);
+            border-radius: 10px 10px 0 0; position: relative; margin: auto;
+        }
+        .middle-layer { transform: scale(0.85); top: 6px; }
+        .top-layer { transform: scale(0.7); top: 26px; }
+        .card-candle {
+            height: 45px; width: 15px;
+            background: repeating-linear-gradient(45deg, #fd3018 0, #fd3018 5px, #ffa89e 5px, #ffa89e 10px);
+            position: absolute; margin: auto; left: 0; right: 0; bottom: 202px;
+        }
+        .card-candle:before {
+            content: ""; position: absolute; height: 16px; width: 16px; background-color: #ffa500;
+            border-radius: 0 50% 50% 50%; bottom: 48px; transform: rotate(45deg); left: -1px;
+        }
+        .outside p { font-size: 23px; text-transform: uppercase; margin-top: 30px; text-align: center; letter-spacing: 6px; color: #000046; }
+
+        /* --- IPHONE RESPONSIVE SCALE --- */
+        @media only screen and (max-width: 768px) {
+            .card {
+                -webkit-transform: scale(0.52); 
+                transform: scale(0.52);
+            }
+            .card.open {
+                -webkit-transform: scale(0.52) rotate(-5deg);
+                transform: scale(0.52) rotate(-5deg);
+            }
+        }
+
+        #btn-next {
+            position: fixed; bottom: 30px; right: 30px;
+            padding: 12px 25px; background: #8b6a60; color: white;
+            border: none; border-radius: 50px; font-size: 14px; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            opacity: 0; transform: translateY(20px); z-index: 100;
+            -webkit-tap-highlight-color: transparent; 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="decorations">
+        <div class="balloon" style="top: 10%; left: 10%;"></div>
+        <div class="balloon" style="top: 50%; right: 15%; animation-delay: 2s;"></div>
+        <div class="heart" style="top: 20%; right: 20%;"></div>
+        <div class="heart" style="bottom: 30%; left: 20%; animation-delay: 1.5s;"></div>
+    </div>
+
+    <!-- PAGE 1: CAKE -->
+    <div id="page-1" class="page">
+        <div class="cake-wrapper">
+            <div class="cake-container">
+                <div class="velas" id="candle-obj"><div class="fuego"></div></div>
+                <svg id="cake-svg" viewBox="0 0 200 500">
+                    <path id="p3" fill="#a88679" d="M173.667-13.94c-49.298,0-102.782,0-147.334,0c-3.999,0-4-16.002,0-16.002c44.697,0,96.586,0,147.334,0C177.667-29.942,177.668-13.94,173.667-13.94z" />
+                    <path id="r2" fill="#8b6a60" d="M100-178.521c1.858,0,3.364,1.506,3.364,3.363c0,0,0,33.17,0,44.227c0,19.144,0,57.431,0,76.574c0,10.152,0,40.607,0,40.607c0,1.858-1.506,3.364-3.364,3.364l0,0c-1.858,0-3.364-1.506-3.364-3.364c0,0,0-30.455,0-40.607c0-19.144,0-57.432,0-76.575c0-11.057,0-44.226,0-44.226C96.636-177.015,98.142-178.521,100-178.521L100-178.521z" />
+                    <path id="p2" fill="#a88679" d="M173.667-15.929c-46.512,0-105.486,0-147.334,0c-3.999,0-4-16.002,0-16.002c43.566,0,97.96,0,147.334,0C177.667-31.931,177.666-15.929,173.667-15.929z" />
+                    <path id="r1" fill="#8b6a60" d="M101.368-73.685c0,12.164,0,15.18,0,28.519c0,22.702,0-13.661,0,8.304c0,14.48,0,18.233,0,30.512c0,1.753-2.958,1.847-2.958,0c0-12.68,0-16.277,0-30.401c0-21.983,0,11.66,0-8.304c0-13.027,0-15.992,0-28.628C98.411-75.883,101.368-75.592,101.368-73.685z" />
+                    <path id="p1" fill="#a88679" d="M173.667,21.571c-33.174,0-111.467,0-147.334,0c-4,0-4-16.002,0-16.002c39.836,0,105.982,0,147.334,0C177.668,5.569,177.667,21.571,173.667,21.571z" />
+                    <path id="crema-path" fill="#fefae9" d="M104.812,113.216c0,3.119-2.164,5.67-4.812,5.67c-2.646,0-4.812-2.551-4.812-5.67c0-5.594,0-16.782,0-22.375c0-5.143,0-15.427,0-20.568c0-7.333,0-21.998,0-29.33c0-5.523,0-16.569,0-22.092c0-3.295,0-9.885,0-13.181C95.188,2.551,97.353,0,100,0c2.648,0,4.812,2.551,4.812,5.669c0,3.248,0,9.743,0,12.991c0,5.428,0,16.284,0,21.711c0,7.618,0,22.854,0,30.472c0,4.952,0,14.854,0,19.807C104.812,96.292,104.812,107.576,104.812,113.216z" />
+                    <rect id="cake-base" fill="#fefae9" x="10" y="475.571" width="180" height="4" opacity="0" />
+                </svg>
+            </div>
+            <div class="cake-text"><h1>Happy Birthday!</h1><p>KAKA🧸</p></div>
+        </div>
+    </div>
+
+    <!-- PAGE 2 -->
+    <div id="page-2" class="page">
+        <div class="card-viewport">
+            <div class="card" id="mainCard">
+              <div class="outside">
+                <div class="front">
+                  <p>Happy Birthday</p>
+                  <div class="card-cake">
+                    <div class="top-layer"></div>
+                    <div class="middle-layer"></div>
+                    <div class="bottom-layer"></div>
+                    <div class="card-candle"></div>
+                  </div>
+                </div>
+                <div class="back"></div>
+              </div>
+              <div class="inside">
+                <p>
+                    Dearest KAKA🧸, <br><br>
+                  I did wish you at the start of your birthday but I messed up so bad thats why I wanted to come back again at the end. Beginnings are always busy, but endings are calm and real. I just wanted you to know that you were on my mind the whole day, from the first moment till the last. I hope your birthday was beautiful, just like you, and that the year ahead brings you lots of peace, happiness, and small moments that make you smile without even trying. May ALLAH bless your life with Barakah, protect your heart, listen to all your silent duas, and keep you safe. Ameen.🧸🎂❤️
+                </p>
+              </div>
+            </div>
+        </div>
+    </div>
+
+    <button id="btn-next">Tap Here →</button>
+
+<script>
+    // Anime.js Animation Sequence
+    const cakeTl = anime.timeline({ easing: 'easeInOutQuad' });
+    cakeTl.add({ targets: '#cake-base', opacity: 1, duration: 500, delay: 500 })
+    .add({ targets: '#p1', opacity: 1, d: [{ value: "M173.667,475.571c-46.512,0-105.486,0-147.334,0c-3.999,0-4-16.002,0-16.002c43.566,0,97.96,0,147.334,0C177.667,459.569,177.666,475.571,173.667,475.571z" }], duration: 800 })
+    .add({ targets: '#r1', opacity: 1, d: [{ value: "M173.667,451.394c2.875,0,2.997,9.257,0,9.131c-22.662-0.956-32.09-0.956-41.756-0.956c-14.48,0-17.884,0-30.163,0c-2.087,0-2.068,0-3.915,0c-13.333,0-8.963,0-23.088,0c-11.668,0-34.99-0.294-48.412,1.831c-4.109,0.65-3.01-10.006,0-10.006C37.129,451.394,149.379,451.394,173.667,451.394z" }], duration: 600 })
+    .add({ targets: '#p2', opacity: 1, d: [{ value: "M173.667,451.394c-49.298,0-102.782,0-147.334,0c-3.999,0-4-16.002,0-16.002c44.697,0,96.586,0,147.334,0C177.667,435.392,177.668,451.394,173.667,451.394z" }], duration: 600 })
+    .add({ targets: '#r2', opacity: 1, d: [{ value: "M102.242,427.569c5.348,0,14.079,0,17.462,0c0,0,17.026,0,27.504,0c19.143,0,20.39-3.797,26.459,0c3,1.877,0,7.823,0,7.823c-2.412,2.258-58.328,0-73.667,0l0,0c-1.858,0-67.187,0-73.667,0c0,0-4.125-4.983,0-7.823c5.201-3.58,16.085,0,23.725,0c8.841,0,20.762,0,20.762,0c3.686,0,8.597,0,19.511,0H102.242z" }], duration: 600 })
+    .add({ targets: '#p3', opacity: 1, d: [{ value: "M173.667,427.569c-49.795,0-101.101,0-147.334,0c-3.999,0-4-16.002,0-16.002c46.385,0,97.539,0,147.334,0C177.668,411.567,177.667,427.569,173.667,427.569z" }], duration: 400 })
+    .add({ targets: '#crema-path', opacity: 1, d: [{ value: "M111.547,415.233c-6.667-0.834-9.667,4.667-13.833,3.333c-19.649-6.291-8.158,22.176-14.5,22.334c-6.667,0.166,2.833-18-13.333-22.167c-29.544-7.615-9.667,43.833-20.167,43.833c-10.333,0,8.004-55.006-16.833-39c-7.5,4.833-9.508-3.78-9.299-7.004c0.799-12.329,23.592-7.153,38.132-7.329c10.234-0.124,20.238-1.505,38.287-2.167c16.642-0.61,32.903,1.125,46.213,1.5c12.438,0.351,35.058-5.579,31.863,6.451c-5.532,20.833,1.25,28.216-4.409,27.883c-7.606-0.447-6.058-37.895-20.62-23.333c-10.167,10.166-15.972-0.747-25,12C119.547,443.568,121.798,416.515,111.547,415.233z" }], duration: 1500 })
+    .add({ targets: '#candle-obj', translateY: 0, opacity: 1, duration: 800, easing: 'easeOutBack' })
+    .add({ targets: '.fuego', opacity: 1, duration: 200, begin: () => document.querySelectorAll('.fuego').forEach(f => f.classList.add('burn')) })
+    .add({ targets: '#btn-next', opacity: 1, translateY: 0, duration: 800 });
+
+    // Transition between pages
+    document.getElementById('btn-next').addEventListener('click', () => {
+        document.getElementById('page-1').style.opacity = '0';
+        document.getElementById('btn-next').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('page-1').style.display = 'none';
+            document.getElementById('btn-next').style.display = 'none';
+            document.getElementById('page-2').style.display = 'flex';
+            setTimeout(() => { document.getElementById('page-2').style.opacity = '1'; }, 50);
+        }, 800);
+    });
+
+    // Interaction Logic (Tap to Toggle Open/Close)
+    const card = document.getElementById('mainCard');
+    card.addEventListener('click', function() {
+        this.classList.toggle('open');
+    });
+</script>
+</body>
+</html>
